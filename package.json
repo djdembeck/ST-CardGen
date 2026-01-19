@@ -2,11 +2,14 @@
   "name": "ccg",
   "private": true,
   "version": "0.1.0",
+  "workspaces": [
+    "server",
+    "frontend"
+  ],
   "scripts": {
-    "dev": "concurrently -n server,web -c yellow,cyan \"npm --prefix server run dev\" \"npm --prefix frontend run dev\"",
-    "build": "npm --prefix frontend run build && npm --prefix server run build",
-    "start": "npm --prefix server run start",
-    "install:all": "npm install && npm --prefix server install && npm --prefix frontend install"
+    "dev": "concurrently -n server,web -c yellow,cyan \"npm run -w server dev\" \"npm run -w frontend dev\"",
+    "build": "npm run -w frontend build && npm run -w server build",
+    "start": "npm run -w server start"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
