@@ -1,0 +1,15 @@
+{
+  "prompt": [{ "node": "6", "input": "text" }],
+  "negativePrompt": [{ "node": "7", "input": "text" }],
+
+  "width": [{ "node": "5", "input": "width" }],
+  "height": [{ "node": "5", "input": "height" }],
+
+  "steps": [{ "node": "3", "input": "steps" }],
+  "cfgScale": [{ "node": "3", "input": "cfg" }],
+  "sampler": [{ "node": "3", "input": "sampler_name" }],
+  "scheduler": [{ "node": "3", "input": "scheduler" }],
+  "seed": [{ "node": "3", "input": "seed" }],
+
+  "model": [{ "node": "4", "input": "ckpt_name" }]
+}

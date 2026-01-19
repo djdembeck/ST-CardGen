@@ -1,0 +1,133 @@
+import fs from "node:fs";
+import path from "node:path";
+import { ConfigSchema, defaultConfig, type AppConfig } from "./schema.js";
+import { saveKey } from "../services/keyStore.js";
+
+const CONFIG_DIR = path.join(process.cwd(), "data");
+const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
+
+function migrateConfig(raw: any) {
+  let changed = false;
+  const next = { ...raw };
+  if (next?.image && typeof next.image === "object") {
+    const defaults = defaultConfig().image.baseUrls;
+    const existing = next.image.baseUrls && typeof next.image.baseUrls === "object" ? next.image.baseUrls : {};
+    const hadAllDefaults =
+      typeof existing.sdapi === "string" &&
+      typeof existing.comfyui === "string" &&
+      typeof existing.koboldcpp === "string" &&
+      typeof existing.stability === "string" &&
+      typeof existing.huggingface === "string" &&
+      typeof existing.google === "string";
+    next.image.baseUrls = { ...defaults, ...existing };
+    if (!hadAllDefaults) changed = true;
+
+    if (typeof next.image.baseUrl === "string" && next.image.baseUrl.length) {
+      const provider = next.image.provider || "comfyui";
+      next.image.baseUrls[provider] = next.image.baseUrl;
+      delete next.image.baseUrl;
+      changed = true;
+    }
+
+    if (next.image.comfyui && typeof next.image.comfyui === "object") {
+      if (!next.image.comfyui.workflow && typeof next.image.comfyui.workflowName === "string") {
+        next.image.comfyui.workflow = next.image.comfyui.workflowName;
+        changed = true;
+      }
+      if (!next.image.comfyui.workflow) {
+        next.image.comfyui.workflow = "sd_basic.json";
+        changed = true;
+      }
+      if (next.image.comfyui.loraName === undefined) {
+        next.image.comfyui.loraName = null;
+        changed = true;
+      }
+      if (next.image.comfyui.loraStrengthModel === undefined) {
+        next.image.comfyui.loraStrengthModel = 1.0;
+        changed = true;
+      }
+      if (next.image.comfyui.loraStrengthClip === undefined) {
+        next.image.comfyui.loraStrengthClip = 1.0;
+        changed = true;
+      }
+    }
+  }
+  if (next?.text && typeof next.text === "object") {
+    const textDefaults = defaultConfig().text;
+    if (!next.text.koboldcpp || typeof next.text.koboldcpp !== "object") {
+      next.text.koboldcpp = { ...textDefaults.koboldcpp };
+      changed = true;
+    }
+    if (!next.text.openaiCompat || typeof next.text.openaiCompat !== "object") {
+      next.text.openaiCompat = { ...textDefaults.openaiCompat };
+      changed = true;
+    }
+    if (!next.text.googleGemini || typeof next.text.googleGemini !== "object") {
+      next.text.googleGemini = { ...textDefaults.googleGemini };
+      changed = true;
+    }
+    if (typeof next.text.baseUrl === "string" && next.text.baseUrl.length) {
+      next.text.koboldcpp.baseUrl = next.text.baseUrl;
+      delete next.text.baseUrl;
+      changed = true;
+    }
+    if (typeof next.text.model === "string" && next.text.model.length) {
+      next.text.koboldcpp.model = next.text.model;
+      delete next.text.model;
+      changed = true;
+    }
+  }
+  return { cfg: next, changed };
+}
+
+export function loadConfig(): AppConfig {
+  try {
+    const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+    const { cfg, changed } = migrateConfig(parsed);
+    const next = ConfigSchema.parse(cfg);
+    if (changed) saveConfig(next);
+    return next;
+  } catch {
+    return defaultConfig();
+  }
+}
+
+export function saveConfig(cfg: AppConfig) {
+  if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2), "utf-8");
+}
+
+export async function migrateSecrets() {
+  if (!fs.existsSync(CONFIG_PATH)) return;
+  try {
+    const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+    const apiKey = parsed?.text?.openaiCompat?.apiKey;
+    if (typeof apiKey === "string" && apiKey.trim()) {
+      const name = "openaiCompat-default";
+      await saveKey(name, apiKey);
+      if (!parsed.text) parsed.text = {};
+      if (!parsed.text.openaiCompat) parsed.text.openaiCompat = {};
+      parsed.text.openaiCompat.apiKeyRef = name;
+      delete parsed.text.openaiCompat.apiKey;
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(parsed, null, 2), "utf-8");
+    }
+
+    const stabilityKey = parsed?.image?.stability?.apiKey;
+    if (typeof stabilityKey === "string" && stabilityKey.trim()) {
+      const existingRef = parsed?.image?.stability?.apiKeyRef;
+      const name = typeof existingRef === "string" && existingRef.trim()
+        ? existingRef.trim()
+        : "stability-default";
+      await saveKey(name, stabilityKey);
+      if (!parsed.image) parsed.image = {};
+      if (!parsed.image.stability) parsed.image.stability = {};
+      parsed.image.stability.apiKeyRef = name;
+      delete parsed.image.stability.apiKey;
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(parsed, null, 2), "utf-8");
+    }
+  } catch (e) {
+    console.warn("Failed to migrate API keys to keychain.");
+  }
+}
