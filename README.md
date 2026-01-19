@@ -109,7 +109,7 @@ Clone the repo:
 ```bash
 git clone https://github.com/ewizza/ST-CardGen.git
 cd ST-CardGen
-
+---
 
 ## Quick start (development)
 
