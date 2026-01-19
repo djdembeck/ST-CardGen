@@ -102,6 +102,14 @@ The config only stores a **key reference name** (e.g. `apiKeyRef: "my-hf-key"`),
 > Note: `keytar` may require build tools on some systems if a prebuilt binary isn’t available.
 
 ---
+## Installation
+
+Clone the repo:
+
+```bash
+git clone https://github.com/ewizza/ST-CardGen.git
+cd ST-CardGen
+
 
 ## Quick start (development)
 
