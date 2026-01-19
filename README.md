@@ -1,4 +1,8 @@
-# ST-CardGen — SillyTavern Character Generator
+# SillyTavern Character Generator
+
+<p align="center">
+  <img src="docs/images/logo.png" alt="ST-CardGen Logo" width="360" />
+</p>
 
 A local-first Character Card Generator for **SillyTavern**.  
 Create characters from an idea prompt, generate an avatar image, edit fields, and export/import **SillyTavern-compatible JSON + PNG cards**.
@@ -36,6 +40,23 @@ This project is a clean build with:
 - Delete from library with confirmation (updates index)
 
 ---
+
+## Screenshots
+
+### Character Workspace
+![Character Workspace](docs/images/screenshot-workspace.png)
+
+### Settings
+
+**Text Completion**
+![Text Completion Settings](docs/images/screenshot-settings-text.png)
+
+**Image Provider**
+![Image Provider Settings](docs/images/screenshot-settings-image.png)
+
+### Library
+![Library](docs/images/screenshot-library.png)
+
 
 ## Provider support
 
