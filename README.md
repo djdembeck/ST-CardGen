@@ -118,3 +118,13 @@ From the repo root:
 ```bash
 npm install
 npm run dev
+
+```
+
+## Docker
+
+Run the published container from the official repo at https://github.com/ewizza/ST-CardGen with the following command:
+
+```bash
+docker run --rm -p 3000:3000 ghcr.io/ewizza/st-cardgen:latest
+```
