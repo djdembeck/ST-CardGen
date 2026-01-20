@@ -128,3 +128,14 @@ Run the published container from the official repo at https://github.com/ewizza/
 ```bash
 docker run --rm -p 3000:3000 ghcr.io/ewizza/st-cardgen:latest
 ```
+
+To persist configuration across container restarts, mount the data directory:
+
+```bash
+docker run --rm -p 3000:3000 -v ./data:/app/data ghcr.io/ewizza/st-cardgen:latest
+```
+
+**What gets stored:**
+- **Config file**: `/app/data/config.json` - Application settings, provider configs, and library path
+- **API keys**: Stored in OS credential vault (keytar) - Windows Credential Manager, macOS Keychain, or Linux Secret Service
+- **Character library**: User-configurable location set in the config (can point to your SillyTavern Characters folder)
